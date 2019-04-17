@@ -69,13 +69,13 @@ function initWarehouseReport(){
 		$(".data_table tr:eq(0) td").each(function() { $(".data_table tr:eq(1)").append("<td><div>Ilość</div><div>Wartość</div></td>"); });
 		$(".data_table tr:eq(1) td:eq(0)").empty();
 
-	$(".data_table tr:gt(0) td").css("min-width", "200px");
+		$(".data_table tr:gt(0) td").css("min-width", "200px");
 		$(".data_table tr:gt(0) td").find("div:eq(0)").css("float","left").css("margin-right","0px").css("min-width","100px");		
 	}
 }
 
 function initWarehouseReport2(){
-	if (isPivot("TABELA WZ A PZ")) {
+	if (isPivot("Wartość WZ według cen zakupu")) {
 		$(".data_table tr:eq(0)").after("<tr></tr>");
 		$(".data_table tr:eq(0) td").each(function() { $(".data_table tr:eq(1)").append("<td><div>Ilość &nbsp; &nbsp; &nbsp;Wartość z PZ <br> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;&nbsp; &nbsp; &nbsp;Wartość z WZ</div> </td>"); });
 		$(".data_table tr:eq(1) td:eq(0)").empty();
@@ -84,6 +84,36 @@ function initWarehouseReport2(){
 	$(".data_table tr:gt(0) td").css("min-width", "50px");
 		$(".data_table tr:gt(0) td").find("div:eq(0)").css("float","right").css("margin-left","1px").css("min-width","100px");		
 	}	
+	
+	for(var i = 1; i < $(".data_table tr:last td").length - 1; i++){
+		var sum = 0;
+		for(var j = 2; j < $(".data_table tr").length - 1; j++){
+			var query = ".data_table tr:eq(" + j + ") td:eq(" + i + ") div:eq(2)";
+			var value  = $(query).text();
+			if (value.length !== 0){
+				sum += parseFloat(value.replace(',', '.').replace(/ /g,''));
+			}
+		}
+		var parts = sum.toFixed(2).split(".");
+		parts[0] = parts[0].replace(/\B(?=(\d{3})+(?!\d))/g, " ");
+		query = ".data_table tr:last td:eq(" + i + ") div:eq(2)";
+		console.log(parts.join(","));
+		$(query).text(parts.join(","));
+	}
+	for(var j = 2; j < $(".data_table tr").length; j++){
+		var sum = 0;
+		for(var i = 1; i < $(".data_table tr:last td").length - 1; i++){
+			var query = ".data_table tr:eq(" + j + ") td:eq(" + i + ") div:eq(2)";
+			var value  = $(query).text();
+			if (value.length !== 0){
+				sum += parseFloat(value.replace(',', '.').replace(/ /g,''));
+			}
+		}
+		var parts = sum.toFixed(2).split(".");
+		parts[0] = parts[0].replace(/\B(?=(\d{3})+(?!\d))/g, " ");
+		query = ".data_table tr:eq(" + j + ") td:last div:eq(2)";
+		$(query).text(parts.join(","));
+	}
 }
 
 function triggerTableAction(ep, vtable_type, vtable_name) {
@@ -633,6 +663,7 @@ function fmt_fc_custom_download_params(uid) {
 		params.doc_type = $("[data-columnname-0*='typ dokumentu magazynowego'] div[node_type='edit']").children("input[type='hidden']").val();
 		params.warehouse_src = $("[data-columnname-0*='magazyn zrodlowy'] div[node_type='edit']").children("input[type='hidden']").val();
 		params.warehouse_dest = $("[data-columnname-0*='magazyn docelowy'] div[node_type='edit']").children("input[type='hidden']").val();
+		params.item = $("#" + uid).val();
 	}
 	if (is_pozycje_pz_in_koszt(uid)) {
 		params.method = 'pozycja_dla_kosztu';
@@ -718,6 +749,8 @@ function checkWarehouseDocumentState() {
 	}
     if (isTableEp("dokumenty magazynowe", "edit_update") ||
     	isTableEp("Dokumenty do akceptacji", "edit_update") ||
+    	isTableEp("Dokumenty dla podwykonawców", "edit_update") ||
+    	isTableEp("dok_oczekujace_mini_magazynier", "edit_update") ||
         isTableEp("dokumenty pz", "edit_update") ||
         isTableEp("dokumenty wz", "edit_update") ||
         isTableEp("dokumenty mm", "edit_update") ||
